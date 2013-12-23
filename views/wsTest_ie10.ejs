@@ -1,0 +1,127 @@
+<!DOCTYPE html>  <meta charset="utf-8" />
+  <title>气象站API测试</title>
+  <script type="text/javascript" src="/javascripts/jquery.js"> </script>
+  <script type="text/javascript" src="/javascripts/underscore.js"> </script>
+  <script language="javascript" type="text/javascript">
+	// var wsUri = "ws://localhost:3002/";
+	// var wsUri = "ws://localhost:3000/";
+
+	var output;
+	var nodeDesStr = '<%- _nodeDes %>';
+	var nodeDes = null;
+
+	  $(document).ready(function(){
+	  		init();
+	  		setInterval('loopToGetNodeInfo()', 5000);
+	  });
+	 function loopToGetNodeInfo(){
+	  	$.get('/ajaxGetNodeInfo', onMessage);	 	
+	 }
+	function init()
+	{
+		nodeDes = JSON.parse(nodeDesStr);
+		output = document.getElementById("output");
+	}
+
+	function onClose(evt)
+	{
+		writeToScreen("断开网络连接");
+	}
+	function onMessage(rawData)
+	{
+		writeToScreen('<span style="color: blue;">原始数据: ' + rawData +'</span>');
+		var data = JSON.parse(rawData);
+		if(data.name == "nodes"){
+			showNodes(data.content);
+		}
+	}
+
+	function showNodes(content)
+	{
+		var nodes = JSON.parse(content);
+		if(nodes.length > 0){
+			for(var i=0; i< nodes.length; i++){
+				var node = nodes[i];
+				var location = _.find(nodeDes, function(_node){
+									return _node.nodeID == node.nodeId;
+								});
+				if(location){
+					writeToScreen('<span style="color: green;">' + location.des +':</span>');
+				}else{
+					writeToScreen('<span style="color: green;">' + node.nodeId +':</span>');
+				}
+
+				showWeather(node);
+				showSoilTempHumi(node);
+			}
+		}
+	}
+	function showWeather(node){
+		if(node.temperature && node.temperature != ""){
+			writeToScreen('<span style="color: black;">温度: ' + node.temperature +'</span>');
+		}
+		if(node.humidity && node.humidity != ""){
+			writeToScreen('<span style="color: black;">湿度: ' + node.humidity +'</span>');
+		}
+		if(node.Solar && node.Solar != ""){
+			writeToScreen('<span style="color: black;">光照强度: ' + node.Solar +'</span>');
+		}
+		if(node.WindMax && node.WindMax != ""){
+			writeToScreen('<span style="color: black;">最大风速: ' + node.WindMax +'</span>');
+		}
+
+		if(node.WindAvg && node.WindAvg != ""){
+			writeToScreen('<span style="color: black;">平均风速: ' + node.WindAvg +'</span>');
+		}	
+
+		if(node.WindDirAvg && node.WindDirAvg != ""){
+			writeToScreen('<span style="color: black;">平均风向: ' + node.WindDirAvg +'</span>');
+		}	
+
+		if(node.RainRate && node.RainRate != ""){
+			writeToScreen('<span style="color: black;">雨量: ' + node.RainRate +'</span>');
+		}		
+		
+		if(node.BP && node.BP  != ""){
+			writeToScreen('<span style="color: black;">气压: ' + node.BP  +'</span>');
+		}	
+		
+	}
+	function showSoilTempHumi(node){
+		if(node.soilTemperature && node.soilTemperature != ""){
+			writeToScreen('<span style="color: black;">土壤温度: ' + node.soilTemperature +'</span>');
+		}
+		if(node.soilMoisture && node.soilMoisture != ""){
+			writeToScreen('<span style="color: black;">土壤湿度: ' + node.soilMoisture  +'</span>');
+		}
+	}
+
+	function onError(evt)
+	{
+		writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+	}
+	function doSend(message)
+	{
+		writeToScreen("已发送: " + message);
+		websocket.send(message);
+	}
+	function writeToScreen(message)
+	{
+		var pre = document.createElement("p");
+		pre.style.wordWrap = "break-word";
+		pre.innerHTML = message;
+		output.appendChild(pre);
+	}
+	// window.addEventListener("load", init, false);
+  </script>
+  
+  <h2>气象站API测试</h2>
+  <div id="output"></div>
+  </html>
+  
+  
+  
+  
+  
+  
+  

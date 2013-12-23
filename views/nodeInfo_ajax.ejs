@@ -1,0 +1,263 @@
+<!DOCTYPE html>  <meta charset="utf-8" />
+	<head>
+	  <title><%= _title %></title>
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <link href="/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen">
+	  <style type="text/css">
+		  	.icon-left{
+		  		width: 64px;
+		  		height: 64px;
+		  		text-align: right;
+		  	}; 
+		  	.item-name{
+		  		font-size: 18px;
+		  		text-align: left;
+		  	}
+		  	.demo-tiles {
+				margin-bottom: 46px;
+			}
+			.tile {
+				background-color: #eff0f2;
+				border-radius: 6px;
+				padding: 14px;
+				position: relative;
+				text-align: center;
+				margin-bottom: 20px;
+			}		
+			.tile-image.big-illustration {
+				height: 111px;
+				margin-top: 20px;
+				width: 112px;
+			}
+			.tile-image {
+			height: 100px;
+			margin: 31px 0 27px;
+			vertical-align: bottom;
+			}
+	        #title{
+	            margin-top: 0;
+	            background-color: rgb(81, 138, 189);
+	            margin-bottom: 2px;
+	            padding: 10px 0px 10px;
+	            color: white;
+	            text-align: center;
+	            font-size: 30px;
+	        }
+	  </style>
+
+
+  	  <script type="text/javascript" src="/javascripts/jquery.js"> </script>
+  	  <script type="text/javascript" src="/javascripts/tools.js"> </script>
+	  <script src="/bootstrap/js/bootstrap.min.js"> </script>
+
+	  <script language="javascript" type="text/javascript">
+
+		var nodeIDs = [<%- _nodeIDs %>];
+		var output;
+		var nodeDesStr = '<%- _nodeDes %>';
+		var sensorTypeStr = '<%- _sensorType %>';
+		var nodeDes = null;
+		var sensorTypeList = null;
+
+		  $(document).ready(function(){
+		  		$.ajaxSetup({cache:false});
+		  		init();
+		  		loopToGetNodeInfo();
+		  		setInterval('loopToGetNodeInfo()', 15000);
+		  		// setInterval('test()', 3000);
+		  });
+		 function loopToGetNodeInfo(){
+		 	var host = get_host_url();
+		 	var url = host + '/ajaxGetNodeInfo';
+		  	$.get(url, function(data){
+		  		onMessage(data);
+		  	});	 	
+		 }		  
+		 function test(){
+		 	updateTile('temperature', 11);
+		 }
+		function init()
+		{
+			nodeDes = JSON.parse(nodeDesStr);
+			sensorTypeList = JSON.parse(sensorTypeStr);
+			output = document.getElementById("output");
+
+			// var data = JSON.parse(test);
+			// showNodes(weatherInfo);
+		}
+
+		function onOpen(evt)
+		{
+			// writeToScreen("网络建立成功");
+			// doSend("WebSocket rocks");
+		}
+		function onClose(evt)
+		{
+			writeToScreen("断开网络连接");
+		}
+		function onMessage(rawData)
+		{
+			// writeToScreen('<span style="color: blue;">原始数据: ' + rawData+'</span>');
+			var data = JSON.parse(rawData);
+			if(data.name == "nodes"){
+				showNodes(data.content);
+			}else if(data.name == "nodeDes"){
+				nodeDes = JSON.parse(data.content);
+			}
+
+			//websocket.close();
+		}
+		function findNodeLocation(nodeID)
+		{
+			for(var i=0; i< nodeDes.length;i++)
+			{
+				if(nodeDes[i].nodeID == nodeID)
+				{
+					return nodeDes[i].des;
+				}
+			}
+			return null;
+		}
+		function showNodes(content)
+		{
+			var nodes = JSON.parse(content);
+			if(nodes.length > 0){
+				for(var i=0; i< nodes.length; i++){
+					var node = nodes[i];
+					var location = findNodeLocation(node.nodeId);
+					if(location){
+						showWeather(node);
+						showSoilTempHumi(node);
+						// writeToScreen('<span style="color: green;">' + location +':</span>');
+					}else{
+						// writeToScreen('<span style="color: green;">' + node.nodeId +':</span>');
+					}
+				}
+			}
+		}
+		function updateTile(_elementName, _value){
+			var sensorType = findSensorType(_elementName);
+			if(sensorType == null) return;
+			var tile = $('#id_'+_elementName);
+			if(tile.length <= 0){
+  	  			var ele;
+		  		ele = '<div class="col-md-3" id="id_'+ _elementName +'"> <div class="tile"> <img src="/images/'+ sensorType.img +'.png" alt="Infinity-Loop" class="tile-image"> <h3 class="tile-title" id = "id_title_'+ _elementName +'">'+ _value + sensorType.unit +'</h3> <p>'+ sensorType.name +'</p> </div> </div>'; 
+		  		$('#tile_container').append(ele);	
+			}
+			else{
+				var titleObj = $('#id_title_'+_elementName);
+				titleObj.text( _value + sensorType.unit);
+			}
+	
+	  	}
+	  	function findSensorType(_elementName){
+	  		for (var i = 0; i < sensorTypeList.length; i++) {
+	  			if(sensorTypeList[i].typeName == _elementName){
+	  				return sensorTypeList[i];
+	  			}
+	  		};
+	  	}
+		function showWeather(node){
+			if(node.temperature && node.temperature != ""){
+				// writeToScreen('<span style="color: black;">温度: ' + node.temperature +'</span>');
+				updateTile('temperature', node.temperature);
+			}
+			if(node.humidity && node.humidity != ""){
+				// writeToScreen('<span style="color: black;">湿度: ' + node.humidity +'</span>');
+				updateTile('humidity', node.humidity);
+			}
+			if(node.Solar && node.Solar != ""){
+				// writeToScreen('<span style="color: black;">光照强度: ' + node.Solar +'</span>');
+				updateTile('Solar', node.Solar);
+			}
+			if(node.WindMax && node.WindMax != ""){
+				// writeToScreen('<span style="color: black;">最大风速: ' + node.WindMax +'</span>');
+				updateTile('WindMax', node.WindMax);
+			}
+
+			if(node.WindAvg && node.WindAvg != ""){
+				// writeToScreen('<span style="color: black;">平均风速: ' + node.WindAvg +'</span>');
+				updateTile('WindAvg', node.WindAvg);
+			}	
+
+			if(node.WindDirAvg && node.WindDirAvg != ""){
+				// writeToScreen('<span style="color: black;">平均风向: ' + node.WindDirAvg +'</span>');
+				updateTile('WindDirAvg', node.WindDirAvg);
+			}	
+
+			// if(node.RainRate && node.RainRate != ""){
+			// 	// writeToScreen('<span style="color: black;">雨量: ' + node.RainRate +'</span>');
+			// 	updateTile('RainRate', node.RainRate);
+			// }		
+			if(node.RainTotal && node.RainTotal != ""){
+				// writeToScreen('<span style="color: black;">雨量: ' + node.RainTotal +'</span>');
+				updateTile('RainTotal', node.RainTotal);
+			}		
+						
+			if(node.BP && node.BP  != ""){
+				// writeToScreen('<span style="color: black;">气压: ' + node.BP  +'</span>');
+				updateTile('BP', node.BP);
+			}	
+			
+		}
+		function showSoilTempHumi(node){
+			if(node.soilTemperature && node.soilTemperature != ""){
+				// writeToScreen('<span style="color: black;">土壤温度: ' + node.soilTemperature +'</span>');
+				updateTile('soilTemperature', node.soilTemperature);
+			}
+			if(node.soilMoisture && node.soilMoisture != ""){
+				// writeToScreen('<span style="color: black;">土壤湿度: ' + node.soilMoisture  +'</span>');
+				updateTile('soilMoisture', node.soilMoisture);
+			}
+		}
+
+		function onError(evt)
+		{
+			writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+		}
+		function doSend(message)
+		{
+			writeToScreen("已发送: " + message);
+			websocket.send(message);
+		}
+		function writeToScreen(message)
+		{
+			var pre = document.createElement("p");
+			pre.style.wordWrap = "break-word";
+			pre.innerHTML = message;
+			output.appendChild(pre);
+		}
+		function backToMain(){
+	        var host = get_host_url();
+	        // var host = window.location.href.substring(window.location.protocol.length);
+	        top.location.href = host + "/allmap";
+		}
+		// window.addEventListener("load", init, false);
+	  </script>
+  	</head>
+  	<body>
+    <div style="margin-bottom:20px;">
+        <h3  id = "title">
+            <%= _title %>
+        </h3>    
+    </div>
+		<ul class="nav nav-pills"  style="background-color: rgb(81, 138, 189); margin-top: -70px;margin-bottom: 30px;">
+		  <li class="active" style="margin-left: 20px;"><a  onclick="backToMain()">返回</a></li>
+		</ul>
+  		<div class="container">
+				<div class="row demo-tiles" id="tile_container">
+				 </div>
+				<div class="row demo-tiles">
+
+				 </div>
+		</div>
+	  <div id="output"></div>
+  	</body>
+  </html>
+  
+  
+  
+  
+  
+  
+  

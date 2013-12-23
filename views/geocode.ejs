@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>地址解析</title>
+<style type="text/css">
+ #map{position:absolute;width:400px; height:300px;}
+</style>
+<script type="text/javascript" src="http://api.go2map.com/maps/js/api_v2.5.1.js"></script>
+</head>
+ 
+<body>
+    <div id="map" style="float:left"></div>
+    <div id="result" style="margin-left:400px;font-size:12px;width:550px;">
+ 
+    </div>
+</body>
+<script>
+/**
+*地址解析
+*/
+var myLatLng = new sogou.maps.Point(12949482.781246997,4837105.69140625);
+var myOptions = {
+  zoom: 15,
+  center: myLatLng
+};
+var map = new sogou.maps.Map(document.getElementById("map"), myOptions);
+function callback(a){//回调函数 标点
+     if(a.status=='ok'){
+         var geometry=a.data[0];
+         new sogou.maps.Marker({
+             map:map,
+             title:geometry.address,
+             position:geometry.location,
+             label:{visible:true}
+         });
+     }
+ 
+};
+var request={address:{addr:'潍坊', city:'全国'}};
+var geo=new sogou.maps.Geocoder();
+geo.geocode(request,callback);
+</script>
+</html>
+ 

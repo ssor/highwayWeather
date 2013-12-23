@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>校园微环境节点分布图</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+
+      <script type="text/javascript" src="/javascripts/jquery.js"> </script>
+    <link rel="stylesheet" href="/jqueryMobile/themes/blue/blue.min.css" />
+    <link rel="stylesheet" href="/jqueryMobile/jquery.mobile.structure-1.3.0.min.css" />    
+    <script src="/jqueryMobile/jquery.mobile-1.3.0.min.js" type="text/javascript"></script> 
+    <script type="text/javascript" src="http://api.go2map.com/maps/js/api_v2.5.1.js"></script>
+    <script src="/javascripts/tools.js" type="text/javascript"></script>  
+    <!-- // <script src="__PUBLIC__/js/jquery.json-2.4.js" type="text/javascript"></script>  -->
+<style type="text/css">
+    
+
+#page1 {
+    height: 100%;
+}
+.ui-content{
+    height: 100%;
+}
+</style>
+    <script type="text/javascript">
+    var g_map;
+    var cameraArray = null;
+    var camera_count = 3;
+
+    // $('#page1').live('pageshow',function(event, ui){                                   
+    //         initialize();       
+    //         SetPointMarkOnMap(null);                     
+    //     });  
+ 
+
+    function initialize()   {
+        var latlng  =   new sogou.maps.LatLng(39.96020463653672,116.35820044708252);
+        var myOptions   =   {
+            zoom:   16,
+            center: latlng,
+            mapControl: false,
+            scaleControl: true,
+            hdMap:true,
+            mapTypeId:  sogou.maps.MapTypeId.ROADMAP
+        };
+        var vMapDiv =   document.getElementById("map_canvas");
+        g_map   =   new sogou.maps.Map(vMapDiv, myOptions);
+
+        // 12953220.703125   4832605.46875
+        // 39.96220463653672,116.36620044708252  北京师范大学
+        // 39.8552, 116.4321  北京中心   
+        // "", 39.96020463653672,116.35920044708252  科技楼  12953235.69052698,4832523.763818118
+        // 39.96141519396341,116.36418342590332  东体育场  12953052.038852531,4832443.172278292
+        // 39.95833957034783,116.36599659919739 学十五楼  12953258.371106194,4832013.396833899
+        // 39.958684968130434,116.36749863624573 英东楼  12953422.943813816,4832045.246731605
+
+        $.ajaxSetup({
+            cache:  false
+        });
+
+        SetPointMarkOnMap(null);                     
+
+    }
+
+    function SetPointMarkOnMap(Point){
+
+        if(cameraArray == null) cameraArray = new Array();
+
+
+        // add_camera("10001", "环境科学楼", 39.961448, 116.358269);    
+        // add_camera("1", "科技楼", 39.96020463653672,116.35920044708252);    
+        // add_camera("2", "学十五楼", 39.95833957034783,116.36599659919739);    
+        // add_camera("3", "英东楼", 39.958684968130434,116.36749863624573);    
+        // add_camera("4", "东体育场", 39.96141519396341,116.36418342590332);    
+        // add_camera("10003", "学一宿舍楼", 39.960774 ,116.355788);    
+        add_camera("1", "科技楼", 12953235.69052698,4832523.763818118);    
+        add_camera("2", "学十五楼", 12953258.371106194,4832013.396833899);    
+        add_camera("3", "英东楼", 12953422.943813816,4832045.246731605);    
+        add_camera("4", "东体育场", 12953052.038852531,4832443.172278292);    
+
+        return;         
+    }
+    function add_camera(guid, text, lat, lng) {
+        var iw02      = null;
+        // var pos02     = new sogou.maps.LatLng(lat, lng);
+        var pos02     = new sogou.maps.Point(lat, lng);
+        var marker02    = new   sogou.maps.Marker(
+                        {   position:   pos02,
+                            map:    g_map,
+                            title:  text,//
+                            icon:   "/images/sensor.png" 
+                        }); 
+        if(iw02 == null){
+            var temp_html = text;
+            // var temp_html = getAddressComponentsHtml('rt.png');
+            iw02 = new sogou.maps.InfoWindow({
+                    content: temp_html,
+                    maxWidth: 300
+            });
+        }
+        if(null != iw02)
+        {
+          sogou.maps.event.addListener(marker02, 'click', function() {
+            // iw02.open(g_map,marker02);
+            // start_refresh(guid);
+            redirect_to_realtime_camera_form(guid);
+          });               
+        }               
+        var cm02 = new cameraWithMark(guid, marker02, iw02);
+        cameraArray.push(cm02);
+
+    }
+    function cameraWithMark(cameraID,marker, infowindow)
+    {
+        this.cameraID = cameraID;
+        this.marker = marker;
+        this.infowindow = infowindow;
+        this.started = 0;//保存是否已经启动自动更新的timer
+    }
+
+    function redirect_to_realtime_camera_form (id) {
+        var host = get_host_url();
+        // var host = window.location.href.substring(window.location.protocol.length);
+        top.location.href = host + "/nodeInfo/"+id;
+        // body...
+    }
+
+
+    window.addEventListener("load", initialize, false);
+
+    </script>
+
+</head>
+<body onload="">
+<div data-role="page" id="page1">
+    <div data-theme="a" data-role="header">
+        <!-- <a data-role = "button" href="http://wwww.index_mobile_map.com" class = "ui-btn-left" data-icon="arrow-l" data-iconpos="left">返回</a> -->
+        <h3>
+            校园微环境节点分布图
+        </h3>
+    </div>
+    <div data-role="content" style="padding:5px;">
+
+        <div id="map_canvas" style="width:100%;height:100%; position:relative;  
+        top:0px;"></div>
+    </div>
+<!--     <div data-theme="a" data-role="footer" data-position="fixed">
+        <h3 onclick = "">
+            
+        </h3>
+    </div> -->
+</div>
+
+</body>
+</html>
